@@ -1,0 +1,135 @@
+# Завдання 1
+import queue
+import time
+import random
+import logging
+import threading
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+
+def generate_request(request_queue, request_id):
+    request_data = f"Заявка №{request_id}"
+    request_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    request_queue.put((request_id, request_time))
+    logging.info(f"Сгенеровано нову заявку: {request_data} в {request_time}")
+
+def process_request(request_queue):
+    if not request_queue.empty():
+        request_id, request_time = request_queue.get()
+        process_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        logging.info(f"Обробка заявки: Заявка №{request_id}, створена в {request_time}, оброблена в {process_time}")
+        # Симуляція затримки обробки
+        time.sleep(random.uniform(0.5, 2.0))
+    else:
+        logging.info("Черга пуста. Немає заявок для обробки.")
+
+def main():
+    request_queue = queue.Queue()
+    request_id = 0
+    running = True
+
+    def stop_program():
+        nonlocal running
+        running = False
+        logging.info("Таймер завершив роботу програми")
+
+    # Налаштування таймера для завершення програми через 10 секунд
+    timer = threading.Timer(10, stop_program)
+    timer.start()
+
+    try:
+        while running:
+            time.sleep(1)  # Симуляція часу між генерацією заявок
+
+            # Генерування нових заявок
+            if random.choice([True, False]):
+                request_id += 1
+                generate_request(request_queue, request_id)
+
+            # Обробка заявок
+            if random.choice([True, False]):
+                process_request(request_queue)
+
+    except Exception as e:
+        logging.error(f"Виникла помилка: {e}")
+    finally:
+        timer.cancel()  # Скасування таймера, якщо програма завершується раніше
+        logging.info("Програма завершила свою роботу.")
+
+if __name__ == "__main__":
+    main()
+
+
+# Завдання 2
+from collections import deque
+import string
+
+def is_palindrome(s) -> bool:
+    # Видалення пробілів і знаків пунктуації, приведення до нижнього регістру
+    s = ''.join(ch.lower() for ch in s if ch.isalnum())
+    
+    deq = deque(s)
+    
+    while len(deq) > 1:
+        if deq.pop() != deq.popleft():
+            return False
+    return True
+
+# Тестування
+def test_true_palindromes():
+    assert is_palindrome("Racecar") == True
+    assert is_palindrome("Able was I ere I saw Elba") == True
+    assert is_palindrome("Madam In Eden, I’m Adam") == True, "Провалено: 'Madam In Eden, I’m Adam'"
+    assert is_palindrome("A Santa at NASA") == True, "Провалено: 'A Santa at NASA'"
+
+def test_not_palindromes():
+    assert is_palindrome("Python") == False, "Провалено: 'Python'"
+    assert is_palindrome("OpenAI") == False, "Провалено: 'OpenAI'"
+
+def test_true_palindromes_with_punctuation():
+    assert is_palindrome("Was it a car or a cat I saw?") == True, "Провалено: 'Was it a car or a cat I saw?'"
+    assert is_palindrome("No 'x' in Nixon") == True, "Провалено: 'No 'x' in Nixon'"
+
+def test_short_palindromes():
+    assert is_palindrome("a") == True, "Провалено: 'a'"
+    assert is_palindrome("ab") == False, "Провалено: 'ab'"
+    assert is_palindrome("") == True, "Провалено: пустий рядок"
+
+def test_mixed_upper_lower():
+    assert is_palindrome("Eva, Can I Stab Bats In A Cave?") == True, "Провалено: 'Eva, Can I Stab Bats In A Cave?'"
+    assert is_palindrome("Mr. Owl Ate My Metal Worm") == True, "Провалено: 'Mr. Owl Ate My Metal Worm'"
+
+if __name__ == "__main__":
+    test_true_palindromes()
+    test_not_palindromes()
+    test_true_palindromes_with_punctuation()
+    test_short_palindromes()
+    test_mixed_upper_lower()
+    print("Усі тести пройдено успішно.")
+    
+# Завдання 3
+def is_balanced(s: str) -> str:
+    stack = []
+    opening_brackets = "({["
+    closing_brackets = ")}]"
+    bracket_map = {")": "(", "}": "{", "]": "["}
+
+    for char in s:
+        if char in opening_brackets:
+            stack.append(char)
+        elif char in closing_brackets:
+            if not stack or stack[-1] != bracket_map[char]:
+                return "Несиметрично"
+            stack.pop()
+
+    return "Симетрично" if not stack else "Несиметрично"
+
+# Тестування
+def test_balanced_brackets():
+    assert is_balanced("( ){[ 1 ]( 1 + 3 )( ){ }}") == "Симетрично", "Провалено: '( ){[ 1 ]( 1 + 3 )( ){ }}'"
+    assert is_balanced("( 23 ( 2 - 3);") == "Несиметрично", "Провалено: '( 23 ( 2 - 3);'"
+    assert is_balanced("( 11 }") == "Несиметрично", "Провалено: '( 11 }'"
+
+if __name__ == "__main__":
+    test_balanced_brackets()
+    print("Усі тести пройдено успішно.")
